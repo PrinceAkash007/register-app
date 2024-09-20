@@ -32,6 +32,10 @@ pipeline {
                 sh "mvn test"
             }
         }
+
+        stage{
+            
+        }
         
         
     }
