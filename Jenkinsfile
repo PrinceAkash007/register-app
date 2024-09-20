@@ -60,15 +60,17 @@ pipeline {
         
         stage('Build & Push docker image') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        docker.withRegistry('', 'docker-credentials') {
-                            docker_image = docker.build("${IMAGE_NAME}")
-                            docker_image.push("${IMAGE_TAG}")
-                            docker_image.push('latest')
-                        }
-                    }
-                }
+                sh """
+                # Build Docker image
+                docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                
+                # Tag image with 'latest' tag
+                docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                
+                # Push both the versioned tag and the 'latest' tag to DockerHub
+                docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                docker push ${IMAGE_NAME}:latest
+                """
             }
         }
     }
