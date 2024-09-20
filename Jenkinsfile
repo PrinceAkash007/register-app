@@ -67,7 +67,20 @@ pipeline {
                 
                 # Tag image with 'latest' tag
                 docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                
+                """
+            }
+        }
+        stage("Trivy docker image scan"){
+            steps{
+                sh """
+                # Scan the Docker image using Trivy
+                trivy image --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG} --format table
+                """
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                sh """
                 # Push both the versioned tag and the 'latest' tag to DockerHub
                 docker push ${IMAGE_NAME}:${IMAGE_TAG}
                 docker push ${IMAGE_NAME}:latest
