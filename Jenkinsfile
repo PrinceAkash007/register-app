@@ -5,6 +5,15 @@ pipeline {
         jdk 'java17'
         maven 'maven3'
     }
+    environment {
+      APP_NAME = "register-app-pipeline"
+      RELEASE = "1.0.0"
+      DOCKER_USER = "akash2147"
+      DOCKER_PASS = "docker-credentials"
+      IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
+      IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
+    }
+
     stages{
         stage('Cleanup workspace') {
             steps {
@@ -37,12 +46,25 @@ pipeline {
                 }
             }
         }
-            stage("Quality Gate"){
+        stage("Quality Gate"){
                 steps{
                     script{
                         waitForQualityGate abortPipeline: false, credentialsId: 'sonar'
                     }
                 }
             }
+        stage('Build & Push docker image'){
+            steps {
+                script{
+                    docker.withRegistry('',DOCKER_PASS){
+                        docker_image= docker.build "${IMAGE_NAME}"
+                    }
+                    docker.withRegistry('',DOCKER_PASS){
+                        docker_image.push("${IMAGE_TAG}")
+                        docker_image.push('latest')
+                    }
+                }
+            }
+        }
         }
     }
