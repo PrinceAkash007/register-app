@@ -6,12 +6,10 @@ pipeline {
         maven 'maven3'
     }
     environment {
-      APP_NAME = "register-app-pipeline"
-      RELEASE = "1.0.0"
-      DOCKER_USER = "akash2147"
-      DOCKER_PASS = "docker-credentials"
-      IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
-      IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
+        APP_NAME = "register-app-pipeline"
+        RELEASE = "1.0.0"
+        IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
+        IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages{
@@ -56,15 +54,13 @@ pipeline {
         stage('Build & Push docker image'){
             steps {
                 script{
-                    docker.withRegistry('',DOCKER_PASS){
-                        docker_image= docker.build "${IMAGE_NAME}"
-                    }
-                    docker.withRegistry('',DOCKER_PASS){
-                        docker_image.push("${IMAGE_TAG}")
-                        docker_image.push('latest')
-                    }
+                    withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        docker.withRegistry('', 'docker-credentials') {
+                            docker_image = docker.build("${IMAGE_NAME}")
+                            docker_image.push("${IMAGE_TAG}")
+                            docker_image.push('latest')
                 }
             }
-        }
+          }
         }
     }
