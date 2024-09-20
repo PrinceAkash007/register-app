@@ -5,7 +5,6 @@ pipeline {
         jdk 'java17'
         maven 'maven3'
     }
-    
     stages{
         stage('Cleanup workspace') {
             steps {
@@ -13,20 +12,17 @@ pipeline {
                 cleanWs()
             }
         }
-        
         stage('Checkout Git') {
             steps {
                 // Checkout Code from GitHub
                 git branch: 'main', credentialsId: 'github', url: 'https://github.com/PrinceAkash007/register-app.git'
             }
         }
-        
         stage('Build application') {
             steps{
                 sh "mvn clean package"
             }    
         }
-        
         stage('Test application') {
             steps{
                 sh "mvn test"
@@ -37,6 +33,13 @@ pipeline {
                 script{
                     withSonarQubeEnv(credentialsId: 'sonar'){
                         sh "mvn sonar:sonar"
+                    }
+                }
+            }
+            stage("Quality Gate"){
+                steps{
+                    script{
+                        waitForQualityGate abortPipeline: false, credentialsId: 'sonar'
                     }
                 }
             }
